@@ -1,0 +1,16 @@
+/build/
+/externals/
+/src/.DS_Store
+/src/.ccls-cache/
+/.workflow/.DS_Store
+/.workflows/.DS_Store
+/.github/.workflows/.DS_Store
+/.github/workflows/.DS_Store
+/cmake*/
+/ninja/
+/ninja.zip
+/instdir/
+/builds/
+/Testing/
+/tst/.DS_Store
+/.DS_Store

@@ -1,0 +1,269 @@
+name: CMake Build Matrix
+
+on: [push, pull_request]
+
+env:
+  CMAKE_VERSION: 3.21.1
+  NINJA_VERSION: 1.10.2
+  BUILD_TYPE: Release
+  CCACHE_VERSION: 4.4
+  VCPKG_DEFAULT_TRIPLET: ""
+
+jobs:
+  build:
+    name: ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+        - {
+            name: "Windows Latest MSVC", artifact: "Windows-MSVC.7z",
+            os: windows-latest,
+            triplet: "x64-windows",
+            preset: ninja-vcpkg-ccache,
+            cc: "", cxx: "",
+          }
+        - {
+            name: "Windows Latest MinGW", artifact: "Windows-MinGW.7z",
+            os: windows-latest,
+            triplet: "x64-mingw-dynamic",
+            preset: ninja-vcpkg-ccache,
+            cc: "gcc", cxx: "g++"
+          }
+        - {
+            name: "Ubuntu Latest GCC", artifact: "Linux.7z",
+            os: ubuntu-latest,
+            triplet: "x64-linux",
+            preset: ninja-vcpkg-ccache,
+            cc: "gcc", cxx: "g++"
+          }
+        - {
+            name: "macOS Latest Clang", artifact: "macOS.7z",
+            os: macos-latest,
+            triplet: "x64-osx",
+            preset: ninja-vcpkg-ccache,
+            cc: "clang", cxx: "clang++"
+          }
+    env:
+      VCPKG_DEFAULT_TRIPLET: ${{ matrix.config.triplet }}
+      VCPKG_DEFAULT_HOST_TRIPLET: ${{ matrix.config.triplet }}
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: Download Ninja and CMake
+      shell: cmake -P {0}
+      run: |
+        set(cmake_version $ENV{CMAKE_VERSION})
+        set(ninja_version $ENV{NINJA_VERSION})
+
+        message(STATUS "Using host CMake version: ${CMAKE_VERSION}")
+
+        if ("${{ runner.os }}" STREQUAL "Windows")
+          set(ninja_suffix "win.zip")
+          set(cmake_suffix "windows-x86_64.zip")
+          set(cmake_dir "cmake-${cmake_version}-windows-x86_64/bin")
+        elseif ("${{ runner.os }}" STREQUAL "Linux")
+          set(ninja_suffix "linux.zip")
+          set(cmake_suffix "linux-x86_64.tar.gz")
+          set(cmake_dir "cmake-${cmake_version}-linux-x86_64/bin")
+        elseif ("${{ runner.os }}" STREQUAL "macOS")
+          set(ninja_suffix "mac.zip")
+          set(cmake_suffix "macos-universal.tar.gz")
+          set(cmake_dir "cmake-${cmake_version}-macos-universal/CMake.app/Contents/bin")
+        endif()
+
+        set(ninja_url "https://github.com/ninja-build/ninja/releases/download/v${ninja_version}/ninja-${ninja_suffix}")
+        file(DOWNLOAD "${ninja_url}" ./ninja.zip SHOW_PROGRESS)
+        execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvf ./ninja.zip)
+
+        set(cmake_url "https://github.com/Kitware/CMake/releases/download/v${cmake_version}/cmake-${cmake_version}-${cmake_suffix}")
+        file(DOWNLOAD "${cmake_url}" ./cmake.zip SHOW_PROGRESS)
+        execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvf ./cmake.zip)
+
+        # Add to PATH environment variable
+        file(TO_CMAKE_PATH "$ENV{GITHUB_WORKSPACE}/${cmake_dir}" cmake_dir)
+        set(path_separator ":")
+        if ("${{ runner.os }}" STREQUAL "Windows")
+          set(path_separator ";")
+        endif()
+        file(APPEND "$ENV{GITHUB_PATH}" "$ENV{GITHUB_WORKSPACE}${path_separator}${cmake_dir}")
+
+        if (NOT "${{ runner.os }}" STREQUAL "Windows")
+          execute_process(
+            COMMAND chmod +x ninja
+            COMMAND chmod +x ${cmake_dir}/cmake
+          )
+        endif()
+
+    - name: Download ccache
+      id: ccache
+      shell: cmake -P {0}
+      run: |
+        set(ccache_url "https://github.com/cristianadam/ccache/releases/download/v$ENV{CCACHE_VERSION}/${{ runner.os }}.tar.xz")
+        file(DOWNLOAD "${ccache_url}" ./ccache.tar.xz SHOW_PROGRESS)
+        execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvf ./ccache.tar.xz)
+
+    - name: Prepare ccache timestamp
+      id: ccache_cache_timestamp
+      shell: cmake -P {0}
+      run: |
+        string(TIMESTAMP current_date "%Y-%m-%d-%H;%M;%S" UTC)
+        message("::set-output name=timestamp::${current_date}")
+
+    - name: ccache cache files
+      uses: actions/cache@v1.1.0
+      with:
+        path: .ccache
+        key: ${{ matrix.config.name }}-ccache-${{ steps.ccache_cache_timestamp.outputs.timestamp }}
+        restore-keys: |
+          ${{ matrix.config.name }}-ccache-
+
+    - name: Configure ccache before building
+      shell: cmake -P {0}
+      run: |
+        file(TO_CMAKE_PATH "$ENV{GITHUB_WORKSPACE}" ccache_basedir)
+        set(ENV{CCACHE_BASEDIR} "${ccache_basedir}")
+        set(ENV{CCACHE_DIR} "${ccache_basedir}/.ccache")
+        set(ENV{CCACHE_COMPRESS} "true")
+        set(ENV{CCACHE_COMPRESSLEVEL} "6")
+        set(ENV{CCACHE_MAXSIZE} "400M")
+        if ("${{ matrix.config.cxx }}" STREQUAL "cl")
+          set(ENV{CCACHE_MAXSIZE} "600M")
+        endif()
+
+
+    - name: Update the vcpkg submodule
+      shell: cmake -P {0}
+      run: |
+        execute_process(COMMAND git submodule update --remote)
+        execute_process(COMMAND git submodule update --init --recursive)
+
+    - name: Restore artifacts, or setup vcpkg (do not install any package)
+      uses: lukka/run-vcpkg@v10.1
+
+    - name: Run CMake consuming CMakePreset.json and vcpkg.json by mean of vcpkg.
+      uses: lukka/run-cmake@v10
+      env:
+        CC: ${{ matrix.config.cc }}
+        CXX: ${{ matrix.config.cxx }}
+      with:
+        configurePreset: ${{ matrix.config.preset }}
+        buildPreset: ${{ matrix.config.preset }}
+
+    - name: Check formatting
+      shell: cmake -P {0}
+      run: |
+        file(GLOB_RECURSE SOURCES LIST_DIRECTORIES true *.h *.cpp)
+        execute_process(COMMAND clang-format $SOURCES)
+
+    - name: ccache statistics
+      shell: cmake -P {0}
+      run: |
+        file(TO_CMAKE_PATH "$ENV{GITHUB_WORKSPACE}" ccache_basedir)
+        set(ENV{CCACHE_BASEDIR} "${ccache_basedir}")
+        set(ENV{CCACHE_DIR} "${ccache_basedir}/.ccache")
+
+        execute_process(COMMAND ccache -s)
+
+    - name: Run tests
+      shell: cmake -P {0}
+      run: |
+        include(ProcessorCount)
+        ProcessorCount(N)
+
+        set(ENV{CTEST_OUTPUT_ON_FAILURE} "ON")
+
+        execute_process(
+          COMMAND ctest -VV -j ${N} --preset ${{ matrix.config.preset }} -C $ENV{BUILD_TYPE}
+          RESULT_VARIABLE result
+          OUTPUT_VARIABLE output
+          ERROR_VARIABLE output
+          ECHO_OUTPUT_VARIABLE ECHO_ERROR_VARIABLE
+        )
+        if (NOT result EQUAL 0)
+          string(REGEX MATCH "[0-9]+% tests.*[0-9.]+ sec.*$" test_results "${output}")
+          string(REPLACE "\n" "%0A" test_results "${test_results}")
+          message("::error::${test_results}")
+          message(FATAL_ERROR "Running tests failed!")
+        endif()
+
+    - name: Install Strip
+      run: cmake --install builds/${{ matrix.config.preset }} --prefix instdir --strip
+
+
+    - name: Pack
+      working-directory: instdir
+      run: cmake -E tar cfv ../${{ matrix.config.artifact }} --format=7zip .
+
+
+    - name: Upload
+      uses: actions/upload-artifact@v1
+      with:
+        path: ./${{ matrix.config.artifact }}
+        name: ${{ matrix.config.artifact }}
+
+  release:
+    if: contains(github.ref, 'tags/v')
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1.0.0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: false
+
+    - name: Store Release url
+      run: |
+        echo "${{ steps.create_release.outputs.upload_url }}" > ./upload_url
+
+    - uses: actions/upload-artifact@v1
+      with:
+        path: ./upload_url
+        name: upload_url
+
+  publish:
+    if: contains(github.ref, 'tags/v')
+    name: ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+        - {
+            name: "Windows Latest MSVC", artifact: "Windows-MSVC.7z",
+            os: ubuntu-latest
+          }
+        - {
+            name: "Windows Latest MinGW", artifact: "Windows-MinGW.7z",
+            os: ubuntu-latest
+          }
+        - {
+            name: "Ubuntu Latest GCC", artifact: "Linux.7z",
+            os: ubuntu-latest
+          }
+        - {
+            name: "macOS Latest Clang", artifact: "macOS.7z",
+            os: ubuntu-latest
+          }
+    needs: release
+
+    steps:
+    - name: Download artifact
+      uses: actions/download-artifact@v1
+      with:
+        name: ${{ matrix.config.artifact }}
+        path: ./
+
+    - name: Upload to Release
+      id: upload_to_release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: ./${{ matrix.config.artifact }}

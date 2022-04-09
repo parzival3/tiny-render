@@ -1,0 +1,22 @@
+#+TITLE: Cmake Vcpkg Project
+
+This project uses cmake as build generator, ninja as the default build system and vcpkg as package manager.
+
+Clone the project with the recursive flag in order to clone the vcpkg repository.
+#+begin_src bash
+git clone https://github.com/parzival3/cmake_vcpkg_project.git --recursive
+#+end_src
+
+** Build
+To build the project run
+#+begin_src bash
+  cmake --preset ninja-vcpkg
+  cmake --build --preset ninja-vcpkg
+#+end_src
+
+** Testing
+To test the project run
+
+#+begin_src bash
+  ctest --preset ninja-vcpkg
+#+end_src
