@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(formula)
+project(tiny-render)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -27,6 +27,8 @@ find_package(GTest CONFIG REQUIRED)
 enable_testing()
 
 include_directories(src)
+include_directories(lib)
 
 add_subdirectory(src)
+add_subdirectory(lib)
 add_subdirectory(tst)
