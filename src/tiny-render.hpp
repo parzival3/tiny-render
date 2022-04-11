@@ -16,6 +16,9 @@ void line(const Vec2i& t_0, const Vec2i& t_1, TGAImage& image,
 void triangle(const Vec2i& t_0, const Vec2i& t_1, const Vec2i& t_2,
               TGAImage& image, const TGAColor& color);
 
+void triangle_2(const Vec2i& t_0, const Vec2i& t_1, const Vec2i& t_2,
+                TGAImage& image, const TGAColor& color);
+
 void line_render(int width, int height, const tr::Model& model,
                  const TGAColor& color, const std::string& tga_filename);
 
