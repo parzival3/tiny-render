@@ -19,7 +19,7 @@ if (CMAKE_SYSTEM_NAME STREQUAL "GNU"           OR
     list(APPEND COMPILER_FLAGS -Weverything -Wno-global-constructors)
   endif()
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-  list(APPEND COMPILER_FLAGS /Wall /WX /wd4668 /wd4514 /wd5045 /wd5026)
+  list(APPEND COMPILER_FLAGS /Wall /WX /wd4820 /wd4668 /wd4514 /wd5045 /wd5026)
 endif()
 
 find_package(GTest CONFIG REQUIRED)
