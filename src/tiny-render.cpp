@@ -1,7 +1,8 @@
 #include "tiny-render.hpp"
 
 #include <iostream>
-#include <range/v3/all.hpp>
+
+#include "common.hpp"
 
 enum class thalf_e { LOWER, HIGHER };
 
