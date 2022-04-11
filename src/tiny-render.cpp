@@ -89,9 +89,9 @@ void tr::line(const Vec2i& t_0, const Vec2i& t_1, TGAImage& image,
        color);
 }
 
-void tr::triangle_2(const tr::Vec2i& t_0, const tr::Vec2i& t_1,
-                    const tr::Vec2i& t_2, TGAImage& image,
-                    const TGAColor& color) {
+void tr::triangle(const tr::Vec2i& t_0, const tr::Vec2i& t_1,
+                  const tr::Vec2i& t_2, TGAImage& image,
+                  const TGAColor& color) {
   auto sorted = sort_triangle({t_0, t_1, t_2});
 
   fill_triangle(sorted, thalf_e::LOWER, image, color);
@@ -104,9 +104,9 @@ void tr::triangle_render(int width, int height, const TGAColor& color,
   tr::Vec2i t0[3] = {Vec2i(10, 70), Vec2i(50, 160), Vec2i(70, 80)};
   tr::Vec2i t1[3] = {Vec2i(180, 50), Vec2i(150, 1), Vec2i(70, 180)};
   tr::Vec2i t2[3] = {Vec2i(180, 150), Vec2i(120, 160), Vec2i(130, 180)};
-  tr::triangle_2(t0[0], t0[1], t0[2], image, color);
-  tr::triangle_2(t1[0], t1[1], t1[2], image, color);
-  tr::triangle_2(t2[0], t2[1], t2[2], image, color);
+  tr::triangle(t0[0], t0[1], t0[2], image, color);
+  tr::triangle(t1[0], t1[1], t1[2], image, color);
+  tr::triangle(t2[0], t2[1], t2[2], image, color);
   image.write_tga_file(tga_filename);
 }
 
