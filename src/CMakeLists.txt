@@ -1,5 +1,5 @@
 set(SOURCES tiny-render.cpp model.cpp)
-set(HEADERS tiny-render.hpp model.hpp geometry.hpp)
+set(HEADERS tiny-render.hpp model.hpp geometry.hpp common.hpp)
 add_library(${CMAKE_PROJECT_NAME} STATIC ${SOURCES})
 target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE range-v3 range-v3-meta range-v3::meta range-v3-concepts)
 
