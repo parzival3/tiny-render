@@ -34,7 +34,8 @@ struct Vec2 {
   }
 
   inline Vec2<Type> operator*(float f) const {
-    return Vec2<Type>(coords.t.u * f, coords.t.v * f);
+    return Vec2<Type>(static_cast<Type>(coords.t.u * f),
+                      static_cast<Type>(coords.t.v * f));
   }
 
   template <typename>
@@ -107,7 +108,7 @@ typedef Vec3<int> Vec3i;
 
 template <typename Type>
 std::ostream& operator<<(std::ostream& s, Vec2<Type>& v) {
-  s << static_cast<std::string>("(") << v.coords.t.x << ", " << v.coords.t.y
+  s << static_cast<std::string>("(") << v.coords.p.x << ", " << v.coords.p.y
     << static_cast<std::string>(")\n");
   return s;
 }
