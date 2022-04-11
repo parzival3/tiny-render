@@ -23,6 +23,7 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 endif()
 
 find_package(GTest CONFIG REQUIRED)
+find_package(range-v3 CONFIG REQUIRED)
 
 enable_testing()
 
