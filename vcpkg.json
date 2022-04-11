@@ -1,7 +1,8 @@
 {
-  "name": "graph",
+  "name": "tiny-render",
   "version-string": "0.0.1",
   "dependencies": [
-    "gtest"
+      "gtest",
+    "range-v3"
   ]
 }
