@@ -42,6 +42,6 @@ std::vector<size_t> tr::Model::face(size_t index) const {
   return faces_.at(index);
 }
 
-size_t tr::Model::verts_number() const { return verts_.size(); }
+size_t tr::Model::verts_size() const { return verts_.size(); }
 
-size_t tr::Model::faces_number() const { return faces_.size(); }
+size_t tr::Model::faces_size() const { return faces_.size(); }
