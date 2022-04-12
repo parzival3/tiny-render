@@ -25,6 +25,13 @@ struct Vec2 {
     coords.t.v = _v;
   }
 
+  Type x() const { return coords.p.x; }
+  Type y() const { return coords.p.y; }
+  Type u() const { return coords.t.u; }
+  Type v() const { return coords.t.v; }
+
+  Type operator[](size_t index) const { return coords.raw.at(index); }
+
   inline Vec2<Type> operator+(const Vec2<Type>& V) const {
     return Vec2<Type>(coords.t.u + V.coords.t.u, coords.t.v + V.coords.t.v);
   }
@@ -61,6 +68,15 @@ struct Vec3 {
     coords.t.y = _y;
     coords.t.z = _z;
   }
+
+  Type x() const { return coords.t.x; }
+  Type y() const { return coords.t.y; }
+  Type z() const { return coords.t.z; }
+  Type ivert() const { return coords.p.ivert; }
+  Type iuv() const { return coords.t.iuv; }
+  Type inorm() const { return coords.t.inorm; }
+
+  Type operator[](size_t index) const { return coords.raw.at(index); }
 
   inline Vec3<Type> operator^(const Vec3<Type>& v) const {
     return Vec3<Type>(coords.t.y * coords.t.z - coords.t.z * v.coords.t.y,
