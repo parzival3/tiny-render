@@ -27,10 +27,25 @@ int main(int argc, char** argv) {
     throw std::runtime_error("Error: couldn't load the image model");
   }
 
-  std::string image_name{"output.tga"};
+  std::string image_name_0{"output_0.tga"};
+  std::string image_name_1{"output_1.tga"};
+  std::string image_name_2{"output_2.tga"};
+  std::string image_name_3{"output_3.tga"};
 
   // tr::line_render(width_line, height_line, *model, white, image_name);
-  tr::triangle_render(width, height, white, image_name);
-  std::cout << "Writing image " << image_name << " ...\n";
+  tr::triangle_render_0(width, height, white, image_name_0);
+  std::cout << "Writing image " << image_name_0 << " ...\n";
+  tr::triangle_render_1(width, height, white, image_name_1);
+  std::cout << "Writing image " << image_name_1 << " ...\n";
+
+  TGAImage image_2(800, 800, TGAImage::RGB);
+  tr::color_obj(image_2, *model);
+  std::cout << "Writing image " << image_name_2 << " ...\n";
+  image_2.write_tga_file(image_name_2);
+
+  TGAImage image_3(800, 800, TGAImage::RGB);
+  tr::light_mono_obj(image_3, *model);
+  std::cout << "Writing image " << image_name_3 << " ...\n";
+  image_3.write_tga_file(image_name_3);
   return 0;
 }
