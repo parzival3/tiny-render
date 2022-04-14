@@ -3,6 +3,7 @@
 #include <stdexcept>
 
 #include "model.hpp"
+#include "render-methods.hpp"
 #include "tga-lib/tgaimage.hpp"
 #include "tiny-render.hpp"
 
