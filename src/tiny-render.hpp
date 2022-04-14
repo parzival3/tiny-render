@@ -6,37 +6,41 @@
 #include "tga-lib/tgaimage.hpp"
 
 namespace tr {
-void say_hello();
 
-void line(int x_0, int y_0, int x_1, int y_1, TGAImage& image,
-          const TGAColor& color);
+// helper functions
+template <typename VecT>
+std::array<VecT, 3> map_obj_to_screen(const std::array<VecT, 3>& world_coords,
+                                      const TGAImage& image) {
+    std::array<VecT, 3> pts;
 
-void line(const Vec2i& t_0, const Vec2i& t_1, TGAImage& image,
-          const TGAColor& color);
+    for (size_t i{}; i < 3; ++i) {
+        pts[i] = VecT(
+            static_cast<int>((world_coords[i].x() + 1.0f) * image.width() / 2.0f + 1.0f),
+            static_cast<int>((world_coords[i].y() + 1.0f) * image.height() / 2.0f + 1.0f),
+            static_cast<int>(world_coords[i].z()));
+    }
+    return pts;
+}
 
-void triangle(const Vec2i& t_0, const Vec2i& t_1, const Vec2i& t_2,
-              TGAImage& image, const TGAColor& color);
+std::optional<Vec3f> barycentric(const std::array<Vec3f, 3>& pts, const Vec3f& p);
 
-void line_render(int width, int height, const tr::Model& model,
-                 const TGAColor& color, const std::string& tga_filename);
+std::array<Vec2f, 2> get_bbox(const std::array<Vec3f, 3>& pts, TGAImage& image);
 
-void triangle_render_0(int width, int height, const TGAColor& color,
-                       const std::string& tga_filename);
+Vec3f normal_vector(std::array<Vec3f, 3> world_coords);
 
-void triangle_render_1(int width, int height, const TGAColor& color,
-                       const std::string& tga_filename);
+// drwaing primitives
+void line(int x_0, int y_0, int x_1, int y_1, TGAImage& image, const TGAColor& color);
 
-void triangle(const std::array<Vec2i, 3>& pts, TGAImage& image,
+void line(const Vec2i& t_0, const Vec2i& t_1, TGAImage& image, const TGAColor& color);
+
+void triangle(const Vec2i& t_0, const Vec2i& t_1, const Vec2i& t_2, TGAImage& image,
               const TGAColor& color);
 
-void color_obj(int width, int height, const tr::Model& model,
-               const std::string& tga_filename);
+void triangle(const std::array<tr::Vec3f, 3>& pts, std::vector<int>& z_buffer,
+              TGAImage& image, const TGAColor& color);
 
-std::optional<Vec3f> barycentric(const std::array<Vec2i, 3>& pts,
-                                 const Vec2i& p);
+void draw_with_z_buffer(const std::array<Vec3f, 3>& pts, std::vector<int>& z_buffer,
+                        tr::Vec3f& P, tr::Vec3f& screen, TGAImage& image,
+                        const TGAColor& color);
 
-std::array<Vec2i, 2> get_bbox(const std::array<Vec2i, 3>& pts, TGAImage& image);
-
-void color_obj(TGAImage& image, const Model& model);
-void light_mono_obj(TGAImage& image, const Model& model);
 }  // namespace tr
